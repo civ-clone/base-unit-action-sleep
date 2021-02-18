@@ -1,6 +1,6 @@
 {
   "name": "@civ-clone/base-unit-action-sleep",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "repository": "git@github.com:civ-clone/base-unit-action-sleep.git",
   "keywords": [
     "typescript",
@@ -22,6 +22,7 @@
     "@civ-clone/civ1-unit": "github:civ-clone/civ1-unit",
     "@civ-clone/core-player": "^0.1.0",
     "@civ-clone/core-turn-based-game": "^0.1.0",
+    "@civ-clone/core-yield": "^0.1.0",
     "@civ-clone/simple-world-generator": "github:civ-clone/simple-world-generator",
     "@types/chai": "^4.2.15",
     "@types/mocha": "^8.0.3",
