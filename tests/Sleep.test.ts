@@ -3,6 +3,7 @@ import Effect from '@civ-clone/core-rule/Effect';
 import Player from '@civ-clone/core-player/Player';
 import RuleRegistry from '@civ-clone/core-rule/RuleRegistry';
 import Sleep from '../Sleep';
+import Sleeping from '../Rules/Sleeping';
 import Turn from '@civ-clone/core-turn-based-game/Turn';
 import Unit from '@civ-clone/core-unit/Unit';
 import UnitRegistry from '@civ-clone/core-unit/UnitRegistry';
@@ -13,15 +14,18 @@ import { expect } from 'chai';
 import simpleRLELoader from '@civ-clone/simple-world-generator/tests/lib/simpleRLELoader';
 
 describe('Sleep', (): void => {
-  it('should automatically clear `Busy` when an enemy `Unit` is within the `Unit`s `visibility` area', (): void => {
+  it('should automatically clear `Busy` when an enemy `Unit` is within the `Unit`s `visibility` area', async (): Promise<void> => {
     const ruleRegistry = new RuleRegistry(),
       unitRegistry = new UnitRegistry(),
       turn = new Turn(),
-      world = simpleRLELoader(ruleRegistry)('36G', 6, 6),
-      player = new Player(),
-      enemy = new Player(),
-      unit = new Warrior(null, player, world.get(1, 1), ruleRegistry),
-      enemyUnit = new Warrior(null, enemy, world.get(3, 3), ruleRegistry);
+      world = await simpleRLELoader(ruleRegistry)('36G', 6, 6),
+      unit = new Warrior(null, new Player(), world.get(1, 1), ruleRegistry),
+      enemyUnit = new Warrior(
+        null,
+        new Player(),
+        world.get(3, 3),
+        ruleRegistry
+      );
 
     unitRegistry.register(unit, enemyUnit);
 
@@ -47,13 +51,13 @@ describe('Sleep', (): void => {
 
     ruleRegistry.register(visibility1);
 
-    expect(unit.busy()).to.instanceof(Busy);
+    expect(unit.busy()).to.instanceof(Sleeping);
     expect((unit.busy() as Busy).validate()).to.false;
 
     ruleRegistry.unregister(visibility1);
     ruleRegistry.register(visibility2);
 
-    expect(unit.busy()).to.instanceof(Busy);
+    expect(unit.busy()).to.instanceof(Sleeping);
     expect((unit.busy() as Busy).validate()).to.true;
   });
 });

@@ -10,12 +10,12 @@ import {
   UnitRegistry,
   instance as unitRegistryInstance,
 } from '@civ-clone/core-unit/UnitRegistry';
-import Busy from '@civ-clone/core-unit/Rules/Busy';
 import Criterion from '@civ-clone/core-rule/Criterion';
 import DelayedAction from '@civ-clone/core-unit/DelayedAction';
+import Effect from '@civ-clone/core-rule/Effect';
+import Sleeping from './Rules/Sleeping';
 import Tile from '@civ-clone/core-world/Tile';
 import Unit from '@civ-clone/core-unit/Unit';
-import Effect from '@civ-clone/core-rule/Effect';
 
 export class Sleep extends DelayedAction {
   #unitRegistry: UnitRegistry;
@@ -34,8 +34,11 @@ export class Sleep extends DelayedAction {
   }
 
   perform() {
+    this.unit().setActive(false);
+    this.unit().moves().set(0);
+
     this.unit().setBusy(
-      new Busy(
+      new Sleeping(
         new Criterion((): boolean =>
           this.from()
             .getSurroundingArea(this.unit().visibility().value())
@@ -51,7 +54,6 @@ export class Sleep extends DelayedAction {
         new Effect((): void => {
           this.unit().setActive();
           this.unit().setBusy();
-          this.unit().moves().set(this.unit().movement());
         })
       )
     );
