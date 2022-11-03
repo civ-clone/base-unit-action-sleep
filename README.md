@@ -1,4 +1,3 @@
 # base-unit-action-sleep
 
-This is a template repo.
-
+This package provides the `Sleep` `Action` for `Unit`s.
