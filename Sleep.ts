@@ -18,7 +18,7 @@ import Tile from '@civ-clone/core-world/Tile';
 import Unit from '@civ-clone/core-unit/Unit';
 
 export class Sleep extends DelayedAction {
-  #unitRegistry: UnitRegistry;
+  private _unitRegistry: UnitRegistry;
 
   constructor(
     from: Tile,
@@ -30,7 +30,7 @@ export class Sleep extends DelayedAction {
   ) {
     super(from, to, unit, ruleRegistry, turn);
 
-    this.#unitRegistry = unitRegistry;
+    this._unitRegistry = unitRegistry;
   }
 
   perform() {
@@ -43,7 +43,7 @@ export class Sleep extends DelayedAction {
           this.from()
             .getSurroundingArea(this.unit().visibility().value())
             .some((tile: Tile): boolean =>
-              this.#unitRegistry
+              this._unitRegistry
                 .getByTile(tile)
                 .some(
                   (unit: Unit): boolean =>
