@@ -10,12 +10,47 @@ import {
   UnitRegistry,
   instance as unitRegistryInstance,
 } from '@civ-clone/core-unit/UnitRegistry';
+import { instance as busyRegistryInstance } from '@civ-clone/core-unit/BusyRegistry';
 import Criterion from '@civ-clone/core-rule/Criterion';
 import DelayedAction from '@civ-clone/core-unit/DelayedAction';
 import Effect from '@civ-clone/core-rule/Effect';
 import Sleeping from './Rules/Sleeping';
 import Tile from '@civ-clone/core-world/Tile';
 import Unit from '@civ-clone/core-unit/Unit';
+
+/**
+ * The `Sleeping` rule for a unit, built the same way fresh or restored.
+ *
+ * Nothing here comes from the action — the criterion is "an enemy is visible
+ * from where I am" and the effect is "wake up", both read off the unit and the
+ * world. That is what makes this one safe to rebuild from a lookup, where the
+ * nine delayed actions are not: they close over a completion turn and a piece
+ * of work, and a save has to carry those as a `PendingEffect`.
+ *
+ * It used to be built inline in `perform`, closing over `this.from()` and the
+ * action's own registry, which made it look like it held action state. It
+ * never did.
+ */
+export const sleeping = (
+  unit: Unit,
+  unitRegistry: UnitRegistry = unitRegistryInstance
+): Sleeping =>
+  new Sleeping(
+    new Criterion((): boolean =>
+      unit
+        .tile()
+        .getSurroundingArea(unit.visibility().value())
+        .some((tile: Tile): boolean =>
+          unitRegistry
+            .getByTile(tile)
+            .some((other: Unit): boolean => other.player() !== unit.player())
+        )
+    ),
+    new Effect((): void => {
+      unit.setActive();
+      unit.setBusy();
+    })
+  );
 
 export class Sleep extends DelayedAction {
   private _unitRegistry: UnitRegistry;
@@ -37,27 +72,15 @@ export class Sleep extends DelayedAction {
     this.unit().setActive(false);
     this.unit().moves().set(0);
 
-    this.unit().setBusy(
-      new Sleeping(
-        new Criterion((): boolean =>
-          this.from()
-            .getSurroundingArea(this.unit().visibility().value())
-            .some((tile: Tile): boolean =>
-              this._unitRegistry
-                .getByTile(tile)
-                .some(
-                  (unit: Unit): boolean =>
-                    unit.player() !== this.unit().player()
-                )
-            )
-        ),
-        new Effect((): void => {
-          this.unit().setActive();
-          this.unit().setBusy();
-        })
-      )
-    );
+    this.unit().setBusy(sleeping(this.unit(), this._unitRegistry));
   }
 }
+
+// Without this a unit saved asleep fails to load: `BusyRegistry.rebuild`
+// throws rather than guess, and guessing would wake the unit silently.
+//
+// `Sleep` extends `DelayedAction` but never calls `super.perform`, so it owes
+// nothing and needs no `PendingEffect` — a plain factory is the whole story.
+busyRegistryInstance.register(Sleeping, (unit: Unit) => sleeping(unit));
 
 export default Sleep;
