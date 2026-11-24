@@ -10,7 +10,10 @@ import {
   UnitRegistry,
   instance as unitRegistryInstance,
 } from '@civ-clone/core-unit/UnitRegistry';
-import { instance as busyRegistryInstance } from '@civ-clone/core-unit/BusyRegistry';
+import {
+  BusyContext,
+  instance as busyRegistryInstance,
+} from '@civ-clone/core-unit/BusyRegistry';
 import Criterion from '@civ-clone/core-rule/Criterion';
 import DelayedAction from '@civ-clone/core-unit/DelayedAction';
 import Effect from '@civ-clone/core-rule/Effect';
@@ -81,6 +84,13 @@ export class Sleep extends DelayedAction {
 //
 // `Sleep` extends `DelayedAction` but never calls `super.perform`, so it owes
 // nothing and needs no `PendingEffect` — a plain factory is the whole story.
-busyRegistryInstance.register(Sleeping, (unit: Unit) => sleeping(unit));
+//
+// It looks for enemies among the loading game's units, so a unit loaded into a game with its own registries wakes for
+// that game's enemies (civ-clone/web-renderer#248).
+busyRegistryInstance.register(
+  Sleeping,
+  (unit: Unit, context: BusyContext = {}): Sleeping =>
+    sleeping(unit, context.units)
+);
 
 export default Sleep;

@@ -49,6 +49,9 @@ exports.Sleep = Sleep;
 //
 // `Sleep` extends `DelayedAction` but never calls `super.perform`, so it owes
 // nothing and needs no `PendingEffect` — a plain factory is the whole story.
-BusyRegistry_1.instance.register(Sleeping_1.default, (unit) => (0, exports.sleeping)(unit));
+//
+// It looks for enemies among the loading game's units, so a unit loaded into a game with its own registries wakes for
+// that game's enemies (civ-clone/web-renderer#248).
+BusyRegistry_1.instance.register(Sleeping_1.default, (unit, context = {}) => (0, exports.sleeping)(unit, context.units));
 exports.default = Sleep;
 //# sourceMappingURL=Sleep.js.map
